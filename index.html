@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mermaid Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --app-bg: #0d1117;
+  --nav-bg: #161b22;
+  --sidebar-bg: #161b22;
+  --editor-bg: #0d1117;
+  --border: #30363d;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-glow: rgba(139,92,246,0.15);
+  --text-1: #f0f6fc;
+  --text-2: #8b949e;
+  --text-3: #484f58;
+  --input-bg: #0d1117;
+  --btn-bg: #21262d;
+  --btn-hover: #30363d;
+  --success: #3fb950;
+  --error: #f85149;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background: var(--app-bg);
+  color: var(--text-1);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+/* ── NAVBAR ── */
+.nav {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+  height: 50px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-1);
+  text-decoration: none;
+  margin-right: 4px;
+}
+
+.brand-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+
+.vsep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+
+.nav-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text-1);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, transform .1s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.btn:hover { background: var(--btn-hover); border-color: #484f58; }
+.btn:active { transform: translateY(1px); }
+.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-icon { padding: 5px 7px; }
+.btn-xs { padding: 3px 7px; font-size: 11px; }
+
+/* ── LAYOUT ── */
+.app-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 270px;
+  min-width: 270px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width .2s, min-width .2s, opacity .2s;
+  flex-shrink: 0;
+}
+.sidebar.hidden { width: 0; min-width: 0; opacity: 0; pointer-events: none; }
+
+.s-section { border-bottom: 1px solid var(--border); }
+
+.s-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.s-header:hover { background: rgba(255,255,255,.03); }
+.s-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); }
+.s-chevron { font-size: 9px; color: var(--text-3); transition: transform .2s; }
+.s-section.collapsed .s-chevron { transform: rotate(-90deg); }
+.s-section.collapsed .s-body { display: none; }
+
+.s-body { padding: 4px 12px 10px; }
+
+/* Theme grid */
+.theme-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+.theme-card {
+  border: 2px solid var(--border);
+  border-radius: 7px;
+  padding: 5px;
+  background: var(--input-bg);
+  cursor: pointer;
+  transition: border-color .15s;
+  text-align: center;
+}
+.theme-card:hover { border-color: #8b5cf6; }
+.theme-card.active { border-color: #8b5cf6; background: var(--accent-glow); }
+.theme-swatch { height: 18px; border-radius: 3px; margin-bottom: 4px; }
+.theme-label { font-size: 10px; font-weight: 600; color: var(--text-2); }
+.theme-card.active .theme-label { color: #a78bfa; }
+
+/* Form rows */
+.f-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; gap: 8px; }
+.f-label { font-size: 11px; color: var(--text-2); flex: 1; min-width: 0; }
+
+.f-input {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-1);
+  padding: 4px 7px;
+  font-size: 11px;
+  outline: none;
+  transition: border-color .15s;
+  font-family: inherit;
+}
+.f-input:focus { border-color: var(--accent); }
+select.f-input { cursor: pointer; }
+.f-input-full { width: 100%; }
+
+/* Color rows */
+.c-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 6px; }
+.c-label { font-size: 11px; color: var(--text-2); flex: 1; }
+.c-wrap { display: flex; align-items: center; gap: 5px; }
+
+input[type="color"] {
+  width: 28px; height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 2px;
+  background: var(--input-bg);
+  cursor: pointer;
+}
+.hex-input {
+  width: 68px;
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+}
+
+/* Range */
+.r-row { margin-bottom: 7px; }
+.r-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.r-label { font-size: 11px; color: var(--text-2); }
+.r-val { font-size: 10px; color: var(--text-3); font-family: 'Fira Code', monospace; }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px;
+  background: var(--border);
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* Toggle */
+.tog-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.tog { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+.tog input { opacity: 0; width: 0; height: 0; }
+.tog-track {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 18px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.tog-track::before {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .2s;
+}
+.tog input:checked + .tog-track { background: var(--accent); }
+.tog input:checked + .tog-track::before { transform: translateX(16px); }
+
+/* ── RESIZE HANDLE ── */
+.rh {
+  width: 4px; flex-shrink: 0;
+  background: transparent;
+  cursor: col-resize;
+  transition: background .15s;
+}
+.rh:hover, .rh.active { background: var(--accent); }
+
+/* ── EDITOR PANE ── */
+.editor-pane {
+  display: flex; flex-direction: column;
+  overflow: hidden; min-width: 180px;
+  border-right: 1px solid var(--border);
+  flex: 1;
+}
+
+.pane-bar {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+  height: 38px;
+  padding: 0 10px;
+  display: flex; align-items: center; gap: 7px;
+  flex-shrink: 0;
+}
+.pane-title { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+
+.editor-wrap { flex: 1; overflow: auto; display: flex; position: relative; }
+.ln {
+  background: var(--editor-bg);
+  color: var(--text-3);
+  font-family: 'Fira Code', monospace;
+  font-size: 12.5px; line-height: 1.65;
+  padding: 14px 8px 14px 10px;
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid var(--border);
+  min-width: 38px;
+  white-space: pre;
+}
+
+#editor {
+  flex: 1;
+  background: var(--editor-bg);
+  color: #c9d1d9;
+  font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-size: 12.5px; line-height: 1.65;
+  padding: 14px;
+  border: none; outline: none; resize: none;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  min-height: 100%;
+}
+
+.editor-foot {
+  background: var(--nav-bg);
+  border-top: 1px solid var(--border);
+  padding: 3px 10px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 10px; color: var(--text-3);
+  flex-shrink: 0;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.status-dot.err { background: var(--error); }
+
+/* ── PREVIEW PANE ── */
+.preview-pane {
+  display: flex; flex-direction: column;
+  overflow: hidden; min-width: 180px; flex: 1.2;
+}
+
+.bg-swatches { display: flex; gap: 3px; align-items: center; }
+.bg-dot {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.bg-dot:hover, .bg-dot.on { border-color: var(--accent); }
+.bg-dot.bw { background: #fff; }
+.bg-dot.bl { background: #f1f5f9; }
+.bg-dot.bd { background: #0f172a; }
+.bg-dot.bt { background: repeating-conic-gradient(#aaa 0% 25%,transparent 0% 50%) 0 0/8px 8px; }
+
+.zoom-row { display: flex; align-items: center; gap: 3px; }
+.zoom-pct { font-size: 10px; color: var(--text-3); min-width: 36px; text-align: center; font-family: 'Fira Code', monospace; }
+
+.preview-vp {
+  flex: 1; overflow: hidden;
+  position: relative;
+  cursor: grab; background: #fff;
+}
+.preview-vp:active { cursor: grabbing; }
+
+.preview-stage {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.preview-content { position: relative; }
+.preview-content svg { display: block; }
+
+.preview-empty {
+  text-align: center;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.preview-empty .ei { font-size: 52px; margin-bottom: 10px; opacity: .4; }
+.preview-empty p { font-size: 13px; }
+
+.preview-err {
+  display: none;
+  background: rgba(248,81,73,.1);
+  border: 1px solid rgba(248,81,73,.3);
+  border-radius: 8px;
+  padding: 14px;
+  color: #fca5a5;
+  font-size: 12px;
+  font-family: 'Fira Code', monospace;
+  max-width: 480px;
+  white-space: pre-wrap;
+}
+
+.spinner {
+  display: none;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .5s linear infinite;
+}
+.spinner.on { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── MODAL ── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  width: 680px; max-width: 94vw;
+  max-height: 82vh;
+  overflow-y: auto;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-title { font-size: 15px; font-weight: 600; }
+
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 8px; }
+.tpl-card {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 13px 10px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  text-align: center;
+}
+.tpl-card:hover { border-color: var(--accent); background: var(--accent-glow); }
+.tpl-icon { font-size: 28px; margin-bottom: 5px; }
+.tpl-name { font-size: 12px; font-weight: 600; }
+.tpl-desc { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+/* ── TOAST ── */
+.toast-box {
+  position: fixed; bottom: 18px; right: 18px;
+  z-index: 300;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.toast {
+  background: var(--nav-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12px;
+  display: flex; align-items: center; gap: 7px;
+  animation: slideUp .2s ease;
+  max-width: 280px;
+}
+@keyframes slideUp { from { transform: translateY(12px); opacity:0; } to { transform: none; opacity:1; } }
+.toast.ok { border-left: 3px solid var(--success); }
+.toast.bad { border-left: 3px solid var(--error); }
+
+/* ── MISC ── */
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  background: rgba(139,92,246,.2);
+  color: #a78bfa;
+  border-radius: 4px;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="nav">
+  <a class="brand" href="#">
+    <span class="brand-icon">⬡</span>
+    Mermaid Studio
+  </a>
+  <span class="tag">Pro</span>
+  <div class="vsep"></div>
+  <button class="btn" id="btnExamples">📋 Examples</button>
+  <div class="nav-actions">
+    <button class="btn" id="btnCopy">📋 Copy</button>
+    <button class="btn" id="btnShare">🔗 Share</button>
+    <button class="btn" id="btnSVG">↓ SVG</button>
+    <button class="btn btn-accent" id="btnPNG">↓ PNG</button>
+  </div>
+</nav>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Theme Presets -->
+    <div class="s-section">
+      <div class="s-header" data-sec="themes">
+        <span class="s-title">Theme Preset</span>
+        <span class="s-chevron">▼</span>
+      </div>
+      <div class="s-body">
+        <div class="theme-grid">
+          <div class="theme-card active" data-theme="default">
+            <div class="theme-swatch" style="background:linear-gradient(135deg,#ff6b6b,#4ecdc4)"></div>
+            <div class="theme-label">Default</div>
+          </div>
+          <div class="theme-card" data-theme="dark">
+            <div class="theme-swatch" style="background:linear-gradient(135deg,#2d3561,#c05c7e)"></div>
+            <div class="theme-label">Dark</div>
+          </div>
+          <div class="theme-card" data-theme="forest">
+            <div class="theme-swatch" style="background:linear-gradient(135deg,#34a853,#1a6630)"></div>
+            <div class="theme-label">Forest</div>
+          </div>
+          <div class="theme-card" data-theme="base">
+            <div class="theme-swatch" style="background:linear-gradient(135deg,#f4f4f4,#ccc)"></div>
+            <div class="theme-label">Base</div>
+          </div>
+          <div class="theme-card" data-theme="neutral">
+            <div class="theme-swatch" style="background:linear-gradient(135deg,#888,#555)"></div>
+            <div class="theme-label">Neutral</div>
+          </div>
+          <div class="theme-card" data-theme="custom">
+            <div class="theme-swatch" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)"></div>
+            <div class="theme-label">Custom ✦</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Colors (only for custom theme) -->
+    <div class="s-section" id="colorSection" style="display:none">
+      <div class="s-header" data-sec="colors">
+        <span class="s-title">Colors</span>
+        <span class="s-chevron">▼</span>
+      </div>
+      <div class="s-body">
+        <div id="colorRows"></div>
+      </div>
+    </div>
+
+    <!-- Typography -->
+    <div class="s-section">
+      <div class="s-header" data-sec="typo">
+        <span class="s-title">Typography</span>
+        <span class="s-chevron">▼</span>
+      </div>
+      <div class="s-body">
+        <div class="f-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+          <span class="f-label">Font Family</span>
+          <select class="f-input f-input-full" id="fontFamily">
+            <option value="'trebuchet ms',verdana,arial">Trebuchet MS (Default)</option>
+            <option value="'Inter',sans-serif">Inter</option>
+            <option value="'Roboto',sans-serif">Roboto</option>
+            <option value="'Lato',sans-serif">Lato</option>
+            <option value="'Segoe UI',system-ui,sans-serif">Segoe UI</option>
+            <option value="'Helvetica Neue',Arial,sans-serif">Helvetica Neue</option>
+            <option value="Georgia,'Times New Roman',serif">Georgia</option>
+            <option value="'Playfair Display',serif">Playfair Display</option>
+            <option value="'Fira Code',monospace">Fira Code</option>
+            <option value="'Courier New',monospace">Courier New</option>
+            <option value="'Comic Sans MS',cursive">Comic Sans</option>
+          </select>
+        </div>
+        <div class="r-row">
+          <div class="r-top">
+            <span class="r-label">Font Size</span>
+            <span class="r-val" id="vFontSize">16px</span>
+          </div>
+          <input type="range" id="fontSize" min="10" max="28" value="16">
+        </div>
+      </div>
+    </div>
+
+    <!-- Layout -->
+    <div class="s-section">
+      <div class="s-header" data-sec="layout">
+        <span class="s-title">Layout & Curves</span>
+        <span class="s-chevron">▼</span>
+      </div>
+      <div class="s-body">
+        <div class="f-row" style="flex-direction:column;align-items:stretch;gap:4px;">
+          <span class="f-label">Curve Style</span>
+          <select class="f-input f-input-full" id="curveStyle">
+            <option value="basis">Basis (smooth)</option>
+            <option value="bumpX">Bump X</option>
+            <option value="bumpY">Bump Y</option>
+            <option value="cardinal">Cardinal</option>
+            <option value="catmullRom">Catmull-Rom</option>
+            <option value="linear">Linear</option>
+            <option value="monotoneX">Monotone X</option>
+            <option value="monotoneY">Monotone Y</option>
+            <option value="natural">Natural</option>
+            <option value="step">Step</option>
+            <option value="stepAfter">Step After</option>
+            <option value="stepBefore">Step Before</option>
+          </select>
+        </div>
+        <div class="r-row">
+          <div class="r-top"><span class="r-label">Rank Spacing</span><span class="r-val" id="vRankSep">50</span></div>
+          <input type="range" id="rankSep" min="20" max="160" value="50">
+        </div>
+        <div class="r-row">
+          <div class="r-top"><span class="r-label">Node Spacing</span><span class="r-val" id="vNodeSep">50</span></div>
+          <input type="range" id="nodeSep" min="10" max="160" value="50">
+        </div>
+        <div class="r-row">
+          <div class="r-top"><span class="r-label">Padding</span><span class="r-val" id="vPadding">15</span></div>
+          <input type="range" id="padding" min="5" max="60" value="15">
+        </div>
+      </div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="s-section">
+      <div class="s-header" data-sec="appearance">
+        <span class="s-title">Node Appearance</span>
+        <span class="s-chevron">▼</span>
+      </div>
+      <div class="s-body">
+        <div class="r-row">
+          <div class="r-top"><span class="r-label">Border Radius</span><span class="r-val" id="vRadius">5px</span></div>
+          <input type="range" id="borderRadius" min="0" max="24" value="5">
+        </div>
+        <div class="r-row">
+          <div class="r-top"><span class="r-label">Stroke Width</span><span class="r-val" id="vStroke">1.5</span></div>
+          <input type="range" id="strokeWidth" min="0.5" max="6" step="0.5" value="1.5">
+        </div>
+        <div class="r-row">
+          <div class="r-top"><span class="r-label">Edge Opacity</span><span class="r-val" id="vEdgeOp">100%</span></div>
+          <input type="range" id="edgeOpacity" min="10" max="100" value="100">
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagram Options -->
+    <div class="s-section">
+      <div class="s-header" data-sec="opts">
+        <span class="s-title">Diagram Options</span>
+        <span class="s-chevron">▼</span>
+      </div>
+      <div class="s-body">
+        <div class="tog-row">
+          <span class="f-label">HTML Labels</span>
+          <label class="tog"><input type="checkbox" id="htmlLabels" checked><span class="tog-track"></span></label>
+        </div>
+        <div class="tog-row">
+          <span class="f-label">Wrap Text</span>
+          <label class="tog"><input type="checkbox" id="wrapText"><span class="tog-track"></span></label>
+        </div>
+        <div class="tog-row">
+          <span class="f-label">Use Max Width</span>
+          <label class="tog"><input type="checkbox" id="useMaxWidth"><span class="tog-track"></span></label>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="rh" id="rh1"></div>
+
+  <!-- EDITOR -->
+  <div class="editor-pane" id="editorPane">
+    <div class="pane-bar">
+      <button class="btn btn-icon btn-xs" id="sidebarToggle" title="Toggle sidebar" style="font-size:14px;">☰</button>
+      <span class="pane-title">Editor</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:5px;">
+        <div class="spinner" id="spin"></div>
+        <button class="btn btn-xs" id="btnClear">Clear</button>
+      </div>
+    </div>
+    <div class="editor-wrap" id="editorWrap">
+      <div class="ln" id="lineNums">1</div>
+      <textarea id="editor" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+    </div>
+    <div class="editor-foot">
+      <span class="status-dot" id="dot"></span>
+      <span id="statusMsg">Ready</span>
+      <span style="margin-left:auto" id="lineInfo">1L</span>
+    </div>
+  </div>
+
+  <div class="rh" id="rh2"></div>
+
+  <!-- PREVIEW -->
+  <div class="preview-pane" id="previewPane">
+    <div class="pane-bar">
+      <span class="pane-title">Preview</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <div class="bg-swatches">
+          <div class="bg-dot bw on" data-bg="white" title="White"></div>
+          <div class="bg-dot bl" data-bg="light" title="Light grey"></div>
+          <div class="bg-dot bd" data-bg="dark" title="Dark"></div>
+          <div class="bg-dot bt" data-bg="checker" title="Transparent"></div>
+        </div>
+        <div style="width:1px;height:18px;background:var(--border);"></div>
+        <div class="zoom-row">
+          <button class="btn btn-icon btn-xs" id="zoomOut">−</button>
+          <span class="zoom-pct" id="zoomPct">100%</span>
+          <button class="btn btn-icon btn-xs" id="zoomIn">+</button>
+          <button class="btn btn-icon btn-xs" id="zoomFit" title="Fit">⊡</button>
+        </div>
+      </div>
+    </div>
+    <div class="preview-vp" id="previewVp">
+      <div class="preview-stage" id="stage">
+        <div class="preview-content" id="previewContent"></div>
+        <div class="preview-err" id="previewErr"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EXAMPLES MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Choose a Template</span>
+      <button class="btn btn-icon" id="closeModal">✕</button>
+    </div>
+    <div class="tpl-grid" id="tplGrid"></div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-box" id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const S = {
+  theme: 'default',
+  colors: {
+    primary:      '#8b5cf6',
+    primaryText:  '#ffffff',
+    secondary:    '#06b6d4',
+    tertiary:     '#f59e0b',
+    background:   '#ffffff',
+    line:         '#64748b',
+    nodeBorder:   '#6d28d9',
+    nodeText:     '#1e293b',
+    clusterBkg:   '#f8f0fe',
+    titleColor:   '#1e293b',
+  },
+  font:       "'trebuchet ms',verdana,arial",
+  fontSize:   16,
+  curve:      'basis',
+  rankSep:    50,
+  nodeSep:    50,
+  padding:    15,
+  radius:     5,
+  stroke:     1.5,
+  edgeOp:     100,
+  htmlLabels: true,
+  wrapText:   false,
+  useMaxWidth:false,
+  zoom:       1,
+  panX:       0,
+  panY:       0,
+  bg:         'white',
+};
+
+const COLOR_DEFS = [
+  { id:'primary',     label:'Primary',      key:'primary' },
+  { id:'primaryText', label:'Primary Text',  key:'primaryText' },
+  { id:'secondary',   label:'Secondary',     key:'secondary' },
+  { id:'tertiary',    label:'Tertiary',      key:'tertiary' },
+  { id:'background',  label:'Background',    key:'background' },
+  { id:'line',        label:'Lines / Edges', key:'line' },
+  { id:'nodeBorder',  label:'Node Border',   key:'nodeBorder' },
+  { id:'nodeText',    label:'Node Text',     key:'nodeText' },
+  { id:'clusterBkg',  label:'Cluster Fill',  key:'clusterBkg' },
+  { id:'titleColor',  label:'Title Color',   key:'titleColor' },
+];
+
+// ═══════════════════════════════════════════════
+// TEMPLATES
+// ═══════════════════════════════════════════════
+const TEMPLATES = [
+  { icon:'🔀', name:'Flowchart', desc:'Process flow', code:
+`flowchart TD
+    A([🚀 Start]) --> B{Environment?}
+    B -->|Production| C[Load Config]
+    B -->|Development| D[Dev Config]
+    C --> E[Init App]
+    D --> E
+    E --> F[Connect DB]
+    F --> G{OK?}
+    G -->|Yes| H([✅ Running])
+    G -->|No| I[Retry]
+    I -->|Max| J([💥 Failed])
+    I -->|Again| F` },
+
+  { icon:'💬', name:'Sequence', desc:'Interactions', code:
+`sequenceDiagram
+    participant U as User
+    participant A as API
+    participant DB as Database
+    U->>A: POST /login
+    A->>DB: SELECT user
+    DB-->>A: User record
+    A-->>U: JWT token
+    U->>A: GET /data (bearer)
+    A->>DB: Query data
+    DB-->>A: Rows
+    A-->>U: JSON response` },
+
+  { icon:'📊', name:'Class', desc:'OOP structure', code:
+`classDiagram
+    class Vehicle {
+        +String make
+        +String model
+        +int year
+        +start() void
+        +stop() void
+    }
+    class Car {
+        +int doors
+        +honk() void
+    }
+    class Truck {
+        +float payload
+        +tow() void
+    }
+    class ElectricCar {
+        +int range
+        +charge() void
+    }
+    Vehicle <|-- Car
+    Vehicle <|-- Truck
+    Car <|-- ElectricCar` },
+
+  { icon:'🔄', name:'State', desc:'State machine', code:
+`stateDiagram-v2
+    [*] --> Idle
+    Idle --> Fetching : trigger()
+    Fetching --> Success : resolved
+    Fetching --> Error : rejected
+    Success --> Idle : reset
+    Error --> Fetching : retry
+    Error --> Idle : cancel
+    Success --> [*] : done` },
+
+  { icon:'🗄️', name:'ER Diagram', desc:'DB schema', code:
+`erDiagram
+    USER ||--o{ ORDER : places
+    ORDER ||--|{ LINE_ITEM : contains
+    PRODUCT ||--o{ LINE_ITEM : "included in"
+    USER { string id PK
+           string email
+           string name }
+    ORDER { string id PK
+            string userId FK
+            date createdAt
+            string status }
+    LINE_ITEM { string id PK
+                string orderId FK
+                string productId FK
+                int qty }
+    PRODUCT { string id PK
+              string name
+              float price }` },
+
+  { icon:'📅', name:'Gantt', desc:'Timeline', code:
+`gantt
+    title Sprint 12
+    dateFormat YYYY-MM-DD
+    section Design
+    Wireframes       :a1, 2024-01-01, 3d
+    Mockups          :a2, after a1, 4d
+    section Dev
+    Backend API      :b1, after a2, 7d
+    Frontend UI      :b2, after a2, 6d
+    Integration      :b3, after b1, 3d
+    section QA
+    Testing          :after b3, 4d
+    Bug fixes        :2d` },
+
+  { icon:'🥧', name:'Pie Chart', desc:'Distribution', code:
+`pie title Tech Stack 2024
+    "TypeScript" : 38.4
+    "JavaScript" : 29.1
+    "Python" : 16.8
+    "Rust" : 8.3
+    "Go" : 5.1
+    "Other" : 2.3` },
+
+  { icon:'🌿', name:'Git Graph', desc:'Branch history', code:
+`gitGraph
+    commit id: "init"
+    branch develop
+    checkout develop
+    commit id: "feat: auth"
+    commit id: "feat: api"
+    checkout main
+    branch hotfix/1.0.1
+    commit id: "fix: crash"
+    checkout main
+    merge hotfix/1.0.1 tag: "v1.0.1"
+    checkout develop
+    commit id: "feat: dashboard"
+    checkout main
+    merge develop tag: "v1.1.0"` },
+
+  { icon:'🧠', name:'Mindmap', desc:'Concept map', code:
+`mindmap
+  root((Product))
+    Strategy
+      Market Research
+      Roadmap
+      Pricing
+    Design
+      UX Research
+      Wireframes
+      Prototypes
+    Engineering
+      Frontend
+        React
+        TypeScript
+      Backend
+        Node.js
+        PostgreSQL
+      DevOps
+        CI/CD
+        Monitoring
+    Launch
+      Marketing
+      Support` },
+
+  { icon:'📆', name:'Timeline', desc:'History', code:
+`timeline
+    title Web Platform Evolution
+    1991 : HTML — World Wide Web
+    1995 : JavaScript / CSS
+    2004 : Web 2.0 era
+    2009 : Node.js
+    2013 : React released
+    2015 : ES6 / TypeScript
+    2017 : WebAssembly
+    2020 : Edge functions
+    2023 : AI-native apps` },
+];
+
+// ═══════════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════════
+const editor     = document.getElementById('editor');
+const lineNums   = document.getElementById('lineNums');
+const dot        = document.getElementById('dot');
+const statusMsg  = document.getElementById('statusMsg');
+const lineInfo   = document.getElementById('lineInfo');
+const spin       = document.getElementById('spin');
+const stage      = document.getElementById('stage');
+const previewContent = document.getElementById('previewContent');
+const previewErr = document.getElementById('previewErr');
+const previewVp  = document.getElementById('previewVp');
+const zoomPct    = document.getElementById('zoomPct');
+
+// ═══════════════════════════════════════════════
+// MERMAID
+// ═══════════════════════════════════════════════
+let renderIdx = 0;
+let renderTimer;
+
+function getMermaidCfg() {
+  const isCustom = S.theme === 'custom';
+  const tv = isCustom ? {
+    primaryColor:        S.colors.primary,
+    primaryTextColor:    S.colors.primaryText,
+    primaryBorderColor:  S.colors.nodeBorder,
+    lineColor:           S.colors.line,
+    secondaryColor:      S.colors.secondary,
+    tertiaryColor:       S.colors.tertiary,
+    background:          S.colors.background,
+    mainBkg:             S.colors.primary,
+    nodeTextColor:       S.colors.nodeText,
+    clusterBkg:          S.colors.clusterBkg,
+    titleColor:          S.colors.titleColor,
+    fontFamily:          S.font,
+    fontSize:            S.fontSize + 'px',
+  } : {
+    fontFamily: S.font,
+    fontSize:   S.fontSize + 'px',
+  };
+
+  return {
+    startOnLoad: false,
+    theme: isCustom ? 'base' : S.theme,
+    themeVariables: tv,
+    flowchart: {
+      curve:       S.curve,
+      rankSpacing: S.rankSep,
+      nodeSpacing: S.nodeSep,
+      padding:     S.padding,
+      htmlLabels:  S.htmlLabels,
+      useMaxWidth: S.useMaxWidth,
+      wrappingWidth: S.wrapText ? 200 : undefined,
+    },
+    sequence: { useMaxWidth: S.useMaxWidth },
+    gantt:    { useMaxWidth: S.useMaxWidth },
+    er:       { useMaxWidth: S.useMaxWidth },
+    fontFamily: S.font,
+    fontSize: S.fontSize,
+  };
+}
+
+async function render() {
+  const code = editor.value.trim();
+  spin.classList.add('on');
+
+  if (!code) {
+    previewContent.innerHTML = `
+      <div class="preview-empty">
+        <div class="ei">⬡</div>
+        <p>Start typing Mermaid code…</p>
+      </div>`;
+    previewErr.style.display = 'none';
+    dot.className = 'status-dot';
+    statusMsg.textContent = 'Ready';
+    spin.classList.remove('on');
+    return;
+  }
+
+  try {
+    mermaid.initialize(getMermaidCfg());
+    const id = 'mg' + (++renderIdx);
+    const { svg } = await mermaid.render(id, code);
+    previewContent.innerHTML = svg;
+    previewErr.style.display = 'none';
+    dot.className = 'status-dot';
+    statusMsg.textContent = 'OK';
+    postProcessSVG();
+  } catch (e) {
+    previewContent.innerHTML = '';
+    previewErr.style.display = 'block';
+    previewErr.textContent = String(e.message || e).replace(/^Error:\s*/,'');
+    dot.className = 'status-dot err';
+    statusMsg.textContent = 'Parse error';
+  }
+  spin.classList.remove('on');
+}
+
+function postProcessSVG() {
+  const svg = previewContent.querySelector('svg');
+  if (!svg) return;
+  svg.style.fontFamily = S.font;
+
+  // Border radius on rects
+  svg.querySelectorAll('.node rect').forEach(r => {
+    r.setAttribute('rx', S.radius);
+    r.setAttribute('ry', S.radius);
+  });
+
+  // Stroke width on edges
+  svg.querySelectorAll('.flowchart-link, .edge path, path.transition').forEach(p => {
+    p.style.strokeWidth = S.stroke + 'px';
+    p.style.opacity = (S.edgeOp / 100);
+  });
+}
+
+function scheduleRender() {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(render, 280);
+}
+
+// ═══════════════════════════════════════════════
+// EDITOR
+// ═══════════════════════════════════════════════
+function updateLines() {
+  const n = editor.value.split('\n').length;
+  lineNums.textContent = Array.from({length: n}, (_,i) => i+1).join('\n');
+  lineInfo.textContent = n + 'L';
+}
+
+editor.addEventListener('input', () => { updateLines(); scheduleRender(); saveUrl(); });
+
+editor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = editor.selectionStart, en = editor.selectionEnd;
+    editor.value = editor.value.substring(0,s) + '  ' + editor.value.substring(en);
+    editor.selectionStart = editor.selectionEnd = s + 2;
+    updateLines();
+    scheduleRender();
+  }
+});
+
+editor.addEventListener('scroll', () => { lineNums.scrollTop = editor.scrollTop; });
+
+document.getElementById('btnClear').addEventListener('click', () => {
+  if (!confirm('Clear the editor?')) return;
+  editor.value = '';
+  updateLines();
+  scheduleRender();
+});
+
+// ═══════════════════════════════════════════════
+// SIDEBAR SECTIONS (collapse)
+// ═══════════════════════════════════════════════
+document.querySelectorAll('.s-header').forEach(h => {
+  h.addEventListener('click', () => h.closest('.s-section').classList.toggle('collapsed'));
+});
+
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('hidden');
+});
+
+// ═══════════════════════════════════════════════
+// THEME PRESET
+// ═══════════════════════════════════════════════
+document.querySelectorAll('.theme-card').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.theme-card').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    S.theme = c.dataset.theme;
+    document.getElementById('colorSection').style.display = S.theme === 'custom' ? '' : 'none';
+    scheduleRender();
+  });
+});
+
+// ═══════════════════════════════════════════════
+// COLOR PICKERS (dynamic build)
+// ═══════════════════════════════════════════════
+const colorRows = document.getElementById('colorRows');
+COLOR_DEFS.forEach(({ id, label, key }) => {
+  const val = S.colors[key];
+  colorRows.insertAdjacentHTML('beforeend', `
+    <div class="c-row">
+      <span class="c-label">${label}</span>
+      <div class="c-wrap">
+        <input type="color" id="cp_${id}" value="${val}">
+        <input type="text" class="f-input hex-input" id="ch_${id}" value="${val}">
+      </div>
+    </div>`);
+
+  const cp = document.getElementById('cp_' + id);
+  const ch = document.getElementById('ch_' + id);
+
+  cp.addEventListener('input', () => {
+    ch.value = cp.value;
+    S.colors[key] = cp.value;
+    scheduleRender();
+  });
+  ch.addEventListener('change', () => {
+    let v = ch.value.trim();
+    if (!v.startsWith('#')) v = '#' + v;
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      cp.value = v;
+      ch.value = v;
+      S.colors[key] = v;
+      scheduleRender();
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════
+function bindSelect(id, key) {
+  document.getElementById(id).addEventListener('change', e => { S[key] = e.target.value; scheduleRender(); });
+}
+function bindRange(id, key, display, suffix='') {
+  const el = document.getElementById(id);
+  const dv = document.getElementById(display);
+  el.addEventListener('input', e => {
+    S[key] = parseFloat(e.target.value);
+    dv.textContent = e.target.value + suffix;
+    scheduleRender();
+  });
+}
+function bindCheck(id, key) {
+  document.getElementById(id).addEventListener('change', e => { S[key] = e.target.checked; scheduleRender(); });
+}
+
+bindSelect('fontFamily',  'font');
+bindRange('fontSize',    'fontSize',  'vFontSize', 'px');
+bindSelect('curveStyle', 'curve');
+bindRange('rankSep',     'rankSep',   'vRankSep');
+bindRange('nodeSep',     'nodeSep',   'vNodeSep');
+bindRange('padding',     'padding',   'vPadding');
+bindRange('borderRadius','radius',    'vRadius',  'px');
+bindRange('strokeWidth', 'stroke',    'vStroke');
+bindRange('edgeOpacity', 'edgeOp',    'vEdgeOp',  '%');
+bindCheck('htmlLabels',  'htmlLabels');
+bindCheck('wrapText',    'wrapText');
+bindCheck('useMaxWidth', 'useMaxWidth');
+
+// ═══════════════════════════════════════════════
+// PREVIEW BG
+// ═══════════════════════════════════════════════
+const bgMap = {
+  white:   { bg: '#ffffff', img: 'none' },
+  light:   { bg: '#f1f5f9', img: 'none' },
+  dark:    { bg: '#0f172a', img: 'none' },
+  checker: { bg: 'transparent', img: 'repeating-conic-gradient(#aaa 0% 25%,#fff 0% 50%)' },
+};
+
+document.querySelectorAll('.bg-dot').forEach(d => {
+  d.addEventListener('click', () => {
+    document.querySelectorAll('.bg-dot').forEach(x => x.classList.remove('on'));
+    d.classList.add('on');
+    S.bg = d.dataset.bg;
+    const { bg, img } = bgMap[S.bg] || bgMap.white;
+    previewVp.style.background = bg;
+    previewVp.style.backgroundImage = img;
+    previewVp.style.backgroundSize = S.bg === 'checker' ? '16px 16px' : '';
+  });
+});
+
+// ═══════════════════════════════════════════════
+// ZOOM & PAN
+// ═══════════════════════════════════════════════
+function applyTransform() {
+  stage.style.transform = `translate(${S.panX}px,${S.panY}px) scale(${S.zoom})`;
+  zoomPct.textContent = Math.round(S.zoom * 100) + '%';
+}
+
+document.getElementById('zoomIn').addEventListener('click',  () => { S.zoom = Math.min(S.zoom * 1.25, 8); applyTransform(); });
+document.getElementById('zoomOut').addEventListener('click', () => { S.zoom = Math.max(S.zoom / 1.25, 0.08); applyTransform(); });
+document.getElementById('zoomFit').addEventListener('click', () => { S.zoom = 1; S.panX = 0; S.panY = 0; applyTransform(); });
+
+previewVp.addEventListener('wheel', e => {
+  e.preventDefault();
+  S.zoom = Math.min(Math.max(S.zoom * (e.deltaY > 0 ? 0.9 : 1.1), 0.08), 8);
+  applyTransform();
+}, { passive: false });
+
+let panning = false, px0, py0, ppx, ppy;
+previewVp.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  panning = true; px0 = e.clientX; py0 = e.clientY; ppx = S.panX; ppy = S.panY;
+});
+document.addEventListener('mousemove', e => {
+  if (!panning) return;
+  S.panX = ppx + (e.clientX - px0);
+  S.panY = ppy + (e.clientY - py0);
+  applyTransform();
+});
+document.addEventListener('mouseup', () => { panning = false; });
+
+// Touch pan
+let touch0 = null;
+previewVp.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) { touch0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, px: S.panX, py: S.panY }; }
+});
+previewVp.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && touch0) {
+    S.panX = touch0.px + (e.touches[0].clientX - touch0.x);
+    S.panY = touch0.py + (e.touches[0].clientY - touch0.y);
+    applyTransform();
+  }
+}, { passive: false });
+previewVp.addEventListener('touchend', () => { touch0 = null; });
+
+// ═══════════════════════════════════════════════
+// RESIZE HANDLES
+// ═══════════════════════════════════════════════
+function makeResizable(handleId, leftId, rightId) {
+  const h = document.getElementById(handleId);
+  const L = document.getElementById(leftId);
+  const R = document.getElementById(rightId);
+  let dragging = false, sx, sl, sr;
+
+  h.addEventListener('mousedown', e => {
+    dragging = true; sx = e.clientX;
+    sl = L.getBoundingClientRect().width;
+    sr = R.getBoundingClientRect().width;
+    h.classList.add('active');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - sx;
+    const nl = Math.max(180, sl + dx);
+    const nr = Math.max(180, sr - dx);
+    L.style.flex = 'none'; L.style.width = nl + 'px';
+    R.style.flex = 'none'; R.style.width = nr + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    h.classList.remove('active');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+}
+
+makeResizable('rh1', 'sidebar', 'editorPane');
+makeResizable('rh2', 'editorPane', 'previewPane');
+
+// ═══════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════
+function dlBlob(blob, name) {
+  const u = URL.createObjectURL(blob);
+  Object.assign(document.createElement('a'), { href: u, download: name }).click();
+  URL.revokeObjectURL(u);
+}
+
+document.getElementById('btnSVG').addEventListener('click', () => {
+  const svg = previewContent.querySelector('svg');
+  if (!svg) { toast('No diagram rendered', 'bad'); return; }
+  dlBlob(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }), 'diagram.svg');
+  toast('SVG exported', 'ok');
+});
+
+document.getElementById('btnPNG').addEventListener('click', () => {
+  const svg = previewContent.querySelector('svg');
+  if (!svg) { toast('No diagram rendered', 'bad'); return; }
+  const s = new XMLSerializer().serializeToString(svg);
+  const url = URL.createObjectURL(new Blob([s], { type: 'image/svg+xml' }));
+  const img = new Image();
+  img.onload = () => {
+    const sc = 2;
+    const c = document.createElement('canvas');
+    c.width  = (img.naturalWidth  || img.width)  * sc;
+    c.height = (img.naturalHeight || img.height) * sc;
+    const ctx = c.getContext('2d');
+    const bg = bgMap[S.bg] || bgMap.white;
+    if (bg.bg !== 'transparent') { ctx.fillStyle = bg.bg; ctx.fillRect(0, 0, c.width, c.height); }
+    ctx.scale(sc, sc);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    c.toBlob(b => { dlBlob(b, 'diagram.png'); toast('PNG exported (2×)', 'ok'); }, 'image/png');
+  };
+  img.src = url;
+});
+
+document.getElementById('btnCopy').addEventListener('click', () => {
+  navigator.clipboard.writeText(editor.value).then(() => toast('Code copied!', 'ok'));
+});
+
+// ═══════════════════════════════════════════════
+// URL SHARE
+// ═══════════════════════════════════════════════
+function saveUrl() {
+  if (typeof LZString === 'undefined') return;
+  history.replaceState(null, '', '#' + LZString.compressToEncodedURIComponent(editor.value));
+}
+
+function loadUrl() {
+  const h = location.hash.slice(1);
+  if (!h) return false;
+  try {
+    const code = typeof LZString !== 'undefined'
+      ? LZString.decompressFromEncodedURIComponent(h)
+      : atob(h);
+    if (code) { editor.value = code; return true; }
+  } catch {}
+  return false;
+}
+
+document.getElementById('btnShare').addEventListener('click', () => {
+  saveUrl();
+  navigator.clipboard.writeText(location.href).then(() => toast('Share link copied!', 'ok'));
+});
+
+// ═══════════════════════════════════════════════
+// TEMPLATES MODAL
+// ═══════════════════════════════════════════════
+const tplGrid = document.getElementById('tplGrid');
+TEMPLATES.forEach(t => {
+  const card = document.createElement('div');
+  card.className = 'tpl-card';
+  card.innerHTML = `<div class="tpl-icon">${t.icon}</div><div class="tpl-name">${t.name}</div><div class="tpl-desc">${t.desc}</div>`;
+  card.addEventListener('click', () => {
+    editor.value = t.code;
+    updateLines();
+    scheduleRender();
+    document.getElementById('modal').classList.remove('open');
+    toast(`Loaded ${t.name}`, 'ok');
+  });
+  tplGrid.appendChild(card);
+});
+
+document.getElementById('btnExamples').addEventListener('click', () => document.getElementById('modal').classList.add('open'));
+document.getElementById('closeModal').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function toast(msg, type='ok') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ═══════════════════════════════════════════════
+// DEFAULT DIAGRAM
+// ═══════════════════════════════════════════════
+const DEFAULT = `flowchart LR
+    subgraph Client
+        A([Browser]) --> B[React App]
+    end
+    subgraph API["API Layer"]
+        C[Gateway] --> D[Auth Service]
+        C --> E[Data Service]
+        C --> F[AI Service]
+    end
+    subgraph Data
+        G[(PostgreSQL)]
+        H[(Redis Cache)]
+        I[(Vector DB)]
+    end
+    B -->|HTTPS| C
+    D --> G
+    E --> G
+    E --> H
+    F --> I`;
+
+if (!loadUrl()) {
+  editor.value = DEFAULT;
+}
+
+updateLines();
+render();
+applyTransform();
+</script>
+</body>
+</html>
