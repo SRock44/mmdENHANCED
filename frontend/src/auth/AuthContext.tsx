@@ -7,8 +7,15 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { api, setApiTokenProvider, type UserMe } from "../api/client";
+import {
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  type User,
+} from "firebase/auth";
+import { setApiTokenProvider, type UserMe } from "../api/client";
 import { getFirebaseAuth, googleProvider } from "../lib/firebase";
 
 type AuthState = {
@@ -21,6 +28,16 @@ type AuthState = {
 };
 
 const AuthContext = createContext<AuthState | null>(null);
+
+function mapFirebaseUser(u: User): UserMe {
+  return {
+    id: u.uid,
+    email: u.email ?? "",
+    displayName: u.displayName ?? null,
+    onboardingCompleted: true,
+    createdAt: u.metadata.creationTime ? new Date(u.metadata.creationTime).toISOString() : undefined,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [user, setUser] = useState<UserMe | null>(null);
@@ -36,41 +53,38 @@ export function AuthProvider({ children }: { children: ReactNode }): React.React
 
   const refresh = useCallback(async () => {
     const u = getFirebaseAuth().currentUser;
-    if (!u) {
-      setUser(null);
-      return;
-    }
-    try {
-      const me = await api.me();
-      setUser(me);
-    } catch {
-      setUser(null);
-    }
+    setUser(u ? mapFirebaseUser(u) : null);
   }, []);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setLoading(true);
-      if (!u) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      try {
-        const me = await api.me();
-        setUser(me);
-      } catch {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
+
+    // Complete redirect-based sign-in when returning from Google.
+    void getRedirectResult(auth).catch(() => {
+      // Ignore here; auth state listener below is the source of truth.
+    });
+
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u ? mapFirebaseUser(u) : null);
+      setLoading(false);
     });
     return unsub;
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    await signInWithPopup(getFirebaseAuth(), googleProvider);
+    const auth = getFirebaseAuth();
+    try {
+      await signInWithPopup(auth, googleProvider);
+      return;
+    } catch (e) {
+      const code = (e as { code?: string })?.code ?? "";
+      // Fallback for popup blockers / COOP restrictions.
+      if (code.includes("popup") || code.includes("blocked") || code.includes("cancelled")) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+      throw e;
+    }
   }, []);
 
   const logout = useCallback(async () => {

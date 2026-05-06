@@ -11,8 +11,7 @@ export function LoginPage(): React.ReactElement {
 
   useEffect(() => {
     if (loading || !user) return;
-    if (!user.onboardingCompleted) nav("/onboarding", { replace: true });
-    else nav("/", { replace: true });
+    nav("/", { replace: true });
   }, [user, loading, nav]);
 
   async function onGoogle(): Promise<void> {
@@ -21,7 +20,8 @@ export function LoginPage(): React.ReactElement {
     try {
       await signInWithGoogle();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Google sign-in failed");
+      const msg = e instanceof Error ? e.message : "Google sign-in failed";
+      setErr(`${msg}. If you use an ad-blocker/privacy extension, allow accounts.google.com and try again.`);
     } finally {
       setBusy(false);
     }
@@ -29,7 +29,7 @@ export function LoginPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex min-h-full items-center justify-center text-[var(--color-loewi-muted)]">Loadingâ€¦</div>
+      <div className="flex min-h-full items-center justify-center text-[var(--color-loewi-muted)]">Loading…</div>
     );
   }
 
@@ -37,20 +37,18 @@ export function LoginPage(): React.ReactElement {
     <div className="flex min-h-full flex-col items-center justify-center px-4 py-16">
       <div className="mb-10 flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c5cfc] to-[#06b6d4] text-lg font-bold text-white">
-          â¬¡
+          ?
         </div>
         <div>
           <h1 className="text-xl font-semibold tracking-tight">{appDisplayName}</h1>
-          <p className="text-xs text-[var(--color-loewi-muted)]">
-            {siteId} Â· Sign in with Google
-          </p>
+          <p className="text-xs text-[var(--color-loewi-muted)]">{siteId} · Sign in with Google</p>
         </div>
       </div>
 
-      <div className="w-full max-w-[400px] rounded-2xl border border-[var(--color-loewi-border)] bg-[var(--color-loewi-surface)] p-8 shadow-2xl">
+      <div className="w-full max-w-[420px] rounded-2xl border border-[var(--color-loewi-border)] bg-[var(--color-loewi-surface)] p-8 shadow-2xl">
         <h2 className="mb-1 text-lg font-semibold">Sign in</h2>
         <p className="mb-6 text-sm text-[var(--color-loewi-muted)]">
-          Uses your Firebase project. Email/password login is disabled on the API.
+          Google auth only. Popup blockers may force redirect flow automatically.
         </p>
 
         {err ? <p className="mb-4 text-sm text-red-400">{err}</p> : null}
@@ -62,7 +60,7 @@ export function LoginPage(): React.ReactElement {
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-loewi-border)] bg-white py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
         >
           <span className="text-lg">G</span>
-          {busy ? "Opening Googleâ€¦" : "Continue with Google"}
+          {busy ? "Opening Google…" : "Continue with Google"}
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { connectAuthEmulator, getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 
 function buildConfig(): FirebaseOptions {
@@ -33,6 +33,7 @@ function buildConfig(): FirebaseOptions {
 
 let app: FirebaseApp | null = null;
 let analyticsInstance: Analytics | null = null;
+let authEmulatorWired = false;
 
 export function getFirebaseApp(): FirebaseApp {
   if (!app) {
@@ -42,7 +43,13 @@ export function getFirebaseApp(): FirebaseApp {
 }
 
 export function getFirebaseAuth() {
-  return getAuth(getFirebaseApp());
+  const auth = getAuth(getFirebaseApp());
+  const emu = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST;
+  if (import.meta.env.DEV && emu && !authEmulatorWired) {
+    connectAuthEmulator(auth, `http://${emu}`, { disableWarnings: true });
+    authEmulatorWired = true;
+  }
+  return auth;
 }
 
 export const googleProvider = new GoogleAuthProvider();
