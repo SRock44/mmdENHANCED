@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, monospace;
+  --color-loewi-bg: #0d1117;
+  --color-loewi-surface: #161b22;
+  --color-loewi-surface2: #1c2128;
+  --color-loewi-border: #30363d;
+  --color-loewi-accent: #7c5cfc;
+  --color-loewi-accent2: #9d7dfd;
+  --color-loewi-muted: #8b949e;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-loewi-bg);
+  color: #e6edf3;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-loewi-border);
+  border-radius: 4px;
+}
