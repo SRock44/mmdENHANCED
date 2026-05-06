@@ -6,6 +6,7 @@ import { api, type DiagramDto } from "../api/client";
 import { DEFAULT_CODE, TEMPLATES } from "./templates";
 import { defaultSettings, settingsFromJson, type StudioSettings } from "./types";
 import { getMermaidConfig } from "./mermaidCfg";
+import { appDisplayName } from "../config/app";
 
 let renderIdx = 0;
 
@@ -257,7 +258,7 @@ export function StudioApp(): React.ReactElement {
           <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-gradient-to-br from-[#7c5cfc] to-[#06b6d4] text-sm text-white">
             ⬡
           </span>
-          <span className="text-[15px]">loewiMMD</span>
+          <span className="text-[15px]">{appDisplayName}</span>
         </div>
         <span className="rounded-full bg-[rgba(124,92,252,.12)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#9d7dfd]">
           Pro

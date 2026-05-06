@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { appDisplayName, siteId } from "../config/app";
 
 export function LoginPage(): React.ReactElement {
   const { signInWithGoogle, user, loading } = useAuth();
@@ -39,8 +40,10 @@ export function LoginPage(): React.ReactElement {
           ⬡
         </div>
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">loewiMMD</h1>
-          <p className="text-xs text-[var(--color-loewi-muted)]">Sign in with Google (Firebase Auth)</p>
+          <h1 className="text-xl font-semibold tracking-tight">{appDisplayName}</h1>
+          <p className="text-xs text-[var(--color-loewi-muted)]">
+            {siteId} · Sign in with Google
+          </p>
         </div>
       </div>
 

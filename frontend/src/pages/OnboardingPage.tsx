@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { appDisplayName } from "../config/app";
 
 const steps = [
   {
-    title: "Welcome to loewiMMD",
+    title: `Welcome to ${appDisplayName}`,
     body: "A focused studio for Mermaid diagrams—live preview, deep theming, and diagrams that sync to your account.",
     icon: "⬡",
   },

@@ -4,6 +4,7 @@ import mermaid from "mermaid";
 import { fetchPublicGraph } from "../api/client";
 import { settingsFromJson } from "../studio/types";
 import { getMermaidConfig } from "../studio/mermaidCfg";
+import { appDisplayName } from "../config/app";
 
 let renderIdx = 0;
 
@@ -49,7 +50,7 @@ export function PublicGraphViewPage(): React.ReactElement {
           <span className="text-lg">⬡</span>
           <div>
             <h1 className="text-sm font-semibold">{title ?? "Shared diagram"}</h1>
-            <p className="text-[10px] text-[var(--color-loewi-muted)]">loewiMMD · public view</p>
+            <p className="text-[10px] text-[var(--color-loewi-muted)]">{appDisplayName} · public view</p>
           </div>
         </div>
         <Link to="/login" className="text-xs font-medium text-[var(--color-loewi-accent2)] hover:underline">
