@@ -1,9 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
-import { RegisterPage } from "./pages/RegisterPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { StudioPage } from "./pages/StudioPage";
+import { PublicGraphViewPage } from "./pages/PublicGraphViewPage";
 
 function Protected({ children }: { children: React.ReactNode }): React.ReactElement {
   const { user, loading } = useAuth();
@@ -36,8 +36,9 @@ function OnboardingGate({ children }: { children: React.ReactNode }): React.Reac
 export default function App(): React.ReactElement {
   return (
     <Routes>
+      <Route path="/g/:graphId" element={<PublicGraphViewPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route
         path="/onboarding"
         element={

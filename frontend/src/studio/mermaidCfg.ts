@@ -4,6 +4,7 @@ export function getMermaidConfig(S: StudioSettings) {
   const isC = S.theme === "custom";
   return {
     startOnLoad: false,
+    // Mermaid accepts several built-in theme names; keep string for presets like forest/dark.
     theme: (isC ? "base" : S.theme) as "base" | "default" | "dark" | "forest" | "neutral",
     themeVariables: isC
       ? {
